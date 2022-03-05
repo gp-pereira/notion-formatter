@@ -5,6 +5,7 @@ export type Paragraph = {
 
 export type Book = {
 	id: string;
+	title: string;
 	paragraphs?: Paragraph[];
 
 	updated_at: Date;
