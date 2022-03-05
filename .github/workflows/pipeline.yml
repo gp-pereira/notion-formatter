@@ -11,6 +11,9 @@ jobs:
     strategy:
       matrix:
         node-version: [17.x]
+    env:
+      NOTION_TOKEN: ${{secrets.NOTION_TOKEN}}
+      NOTION_DATABASE_ID: ${{secrets.NOTION_DATABASE_ID}}
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-node@v1
