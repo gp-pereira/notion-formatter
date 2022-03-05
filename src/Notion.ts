@@ -76,6 +76,7 @@ export class Notion {
 	private parse_book(book: any): Book {
 		return {
 			id: book.id,
+			title: book.properties.Title.title,
 			updated_at: new Date(book.last_edited_time),
 			formatted_at: this.formatted_at(book.properties.formatted_at.date?.start),
 		};

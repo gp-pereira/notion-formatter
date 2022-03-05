@@ -15,6 +15,7 @@ describe("Notion", () => {
 		expect(books.length).toBeGreaterThan(0);
 
 		expect(books[0].id).toBeDefined();
+		expect(books[0].title).toBeDefined();
 		expect(books[0].updated_at).toBeDefined();
 		expect(books[0].formatted_at).toBeDefined();
 		expect(books[0].paragraphs).not.toBeDefined();
@@ -23,6 +24,7 @@ describe("Notion", () => {
 	it("should retrieve the paragraphs for a given book", async () => {
 		const book = {
 			id: "d89f96c1-b90c-4f94-8c5c-e70cf0d0ae82",
+			title: "Clean Architecture",
 			updated_at: new Date(),
 			formatted_at: null,
 		};
@@ -39,6 +41,7 @@ describe("Notion", () => {
 	it("should update a book", async () => {
 		const book = {
 			id: "d89f96c1-b90c-4f94-8c5c-e70cf0d0ae82",
+			title: "Clean Architecture",
 			updated_at: new Date(),
 			formatted_at: new Date(),
 		};
@@ -56,6 +59,7 @@ describe("Notion", () => {
 	it("should update a book's paragraphs", async () => {
 		const book = {
 			id: "d89f96c1-b90c-4f94-8c5c-e70cf0d0ae82",
+			title: "Clean Architecture",
 			updated_at: new Date(),
 			formatted_at: new Date(),
 			paragraphs: [
