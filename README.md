@@ -5,7 +5,7 @@
 ## Motivation
 While I'm reading, I like to copy interesting excerpts into Notion so I can review them later.
 
-The problem is that when I copy a paragraph, I also copy the its formatting. 
+The problem is that when I copy a paragraph, I also copy its formatting. 
 
 In the past, I'd have to paste it and fix this line by line. 
 
@@ -15,5 +15,9 @@ But not anymore. This code periodically checks for updated pages and formats the
 
 ![image](https://user-images.githubusercontent.com/55860205/156891759-be02e24d-0d3b-43a2-a6ed-8af69743bbac.png)
 
+## Results
 
+In case you're wondering, this excerpt comes from Dave Farley's book, Modern Software Engineering.
+
+You can find many more of them (now **properly formatted**) in my [Notion Book Notes](https://www.notion.so/7d19da5c61194297a0cba6f935511ba1?v=9c75395dff014f439be5162d7d252746).
 
