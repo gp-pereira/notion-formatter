@@ -1,4 +1,4 @@
-name: Notion Formatter Pipeline
+name: CI/CD
 
 on:
   push:
