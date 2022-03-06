@@ -44,6 +44,12 @@ describe("Notion", () => {
 			title: "Clean Architecture",
 			updated_at: new Date(),
 			formatted_at: new Date(),
+			paragraphs: [
+				{
+					id: "7daa1e02-6dd4-4f40-9c23-cf0235295599",
+					content: String(Math.random()),
+				},
+			],
 		};
 
 		const updated_book = await notion.update_book(book);
@@ -54,24 +60,6 @@ describe("Notion", () => {
 
 		expect(updated_book.formatted_at!.getTime()).toBeGreaterThan(start);
 		expect(updated_book.formatted_at!.getTime()).toBeLessThan(end);
-	});
-
-	it("should update a book's paragraphs", async () => {
-		const book = {
-			id: "d89f96c1-b90c-4f94-8c5c-e70cf0d0ae82",
-			title: "Clean Architecture",
-			updated_at: new Date(),
-			formatted_at: new Date(),
-			paragraphs: [
-				{
-					id: "7daa1e02-6dd4-4f40-9c23-cf0235295599",
-					content:
-						"Source code dependencies must point only inward, toward higher-level policies.",
-				},
-			],
-		};
-
-		const updated_book = await notion.update_paragraphs(book);
 
 		expect(updated_book.paragraphs).toEqual(book.paragraphs);
 	});

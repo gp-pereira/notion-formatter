@@ -29,6 +29,10 @@ export class Notion {
 		return { ...book, paragraphs };
 	}
 
+	private is_paragraph(block: any): boolean {
+		return block.type === "paragraph" && block.paragraph.rich_text.length > 0;
+	}
+
 	async update_book(book: Book): Promise<Book> {
 		const response = await this.client.pages.update({
 			page_id: book.id,
@@ -42,35 +46,43 @@ export class Notion {
 			},
 		});
 
-		return this.parse_book(response);
+		return {
+			...book,
+			...(await this.update_paragraphs(book)),
+			...this.parse_book(response),
+		};
 	}
 
-	async update_paragraphs(book: Book): Promise<Book> {
-		if (!book.paragraphs) return book;
-
+	private async update_paragraphs(book: Book): Promise<Book> {
 		const paragraphs = await Promise.all(
-			book.paragraphs.map(async (paragraph) => this.update_paragraph(paragraph))
+			book.paragraphs!.map(async (paragraph) =>
+				this.update_paragraph(paragraph)
+			)
 		);
 
 		return { ...book, paragraphs };
 	}
 
 	private async update_paragraph(paragraph: Paragraph) {
-		const response = await this.client.blocks.update({
-			block_id: paragraph.id,
-			paragraph: {
-				rich_text: [
-					{
-						type: "text",
-						text: {
-							content: paragraph.content,
+		try {
+			const response = await this.client.blocks.update({
+				block_id: paragraph.id,
+				paragraph: {
+					rich_text: [
+						{
+							type: "text",
+							text: {
+								content: paragraph.content,
+							},
 						},
-					},
-				],
-			},
-		});
+					],
+				},
+			});
 
-		return this.parse_paragraph(response);
+			return this.parse_paragraph(response);
+		} catch (err) {
+			return paragraph;
+		}
 	}
 
 	private parse_book(book: any): Book {
@@ -84,10 +96,6 @@ export class Notion {
 
 	private formatted_at(date?: string): Date | null {
 		return date ? new Date(date) : null;
-	}
-
-	private is_paragraph(block: any): boolean {
-		return block.type === "paragraph" && block.paragraph.rich_text.length > 0;
 	}
 
 	private parse_paragraph(block: any): Paragraph {
