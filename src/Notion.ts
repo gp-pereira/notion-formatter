@@ -1,5 +1,6 @@
 import { Client } from "@notionhq/client";
 import { Book, Paragraph } from "./Book";
+import { timer } from "./timer";
 
 export class Notion {
 	private client: Client;
@@ -34,6 +35,8 @@ export class Notion {
 	}
 
 	async update_book(book: Book): Promise<Book> {
+		book = await this.update_paragraphs(book);
+
 		const response = await this.client.pages.update({
 			page_id: book.id,
 			properties: {
@@ -46,43 +49,35 @@ export class Notion {
 			},
 		});
 
-		return {
-			...book,
-			...(await this.update_paragraphs(book)),
-			...this.parse_book(response),
-		};
+		return { ...book, ...this.parse_book(response) };
 	}
 
 	private async update_paragraphs(book: Book): Promise<Book> {
 		const paragraphs = await Promise.all(
-			book.paragraphs!.map(async (paragraph) =>
-				this.update_paragraph(paragraph)
-			)
+			book.paragraphs!.map(async (paragraph, i) => {
+				return this.update_paragraph(paragraph);
+			})
 		);
 
 		return { ...book, paragraphs };
 	}
 
 	private async update_paragraph(paragraph: Paragraph) {
-		try {
-			const response = await this.client.blocks.update({
-				block_id: paragraph.id,
-				paragraph: {
-					rich_text: [
-						{
-							type: "text",
-							text: {
-								content: paragraph.content,
-							},
+		const response = await this.client.blocks.update({
+			block_id: paragraph.id,
+			paragraph: {
+				rich_text: [
+					{
+						type: "text",
+						text: {
+							content: paragraph.content,
 						},
-					],
-				},
-			});
+					},
+				],
+			},
+		});
 
-			return this.parse_paragraph(response);
-		} catch (err) {
-			return paragraph;
-		}
+		return this.parse_paragraph(response);
 	}
 
 	private parse_book(book: any): Book {
