@@ -42,6 +42,8 @@ describe.only("Formatter", () => {
 			],
 		}));
 
+		jest.spyOn(console, "log").mockImplementation();
+
 		const [formatted_book] = await formatter.execute();
 
 		expect(formatted_book).toEqual({
@@ -62,6 +64,8 @@ describe.only("Formatter", () => {
 				},
 			],
 		});
+
+		expect(console.log).toHaveBeenCalled();
 	});
 
 	it("should not format books before an external update is made", async () => {
@@ -78,5 +82,31 @@ describe.only("Formatter", () => {
 		const formatted_books = await formatter.execute();
 
 		expect(formatted_books).toEqual([]);
+	});
+
+	it("should not stop formatting after a failure", async () => {
+		fake_notion.retrieve_books.mockResolvedValue([
+			{
+				...book,
+				paragraphs: [],
+			},
+		]);
+
+		fake_notion.retrieve_paragraphs.mockImplementationOnce(() => {
+			throw new Error("Random external error");
+		});
+
+		jest.spyOn(console, "log").mockImplementation();
+
+		const formatted_books = await formatter.execute();
+
+		expect(formatted_books).toEqual([
+			{
+				...book,
+				paragraphs: [],
+			},
+		]);
+
+		expect(console.log).toHaveBeenCalled();
 	});
 });

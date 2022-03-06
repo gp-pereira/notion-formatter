@@ -22,13 +22,23 @@ export class Formatter {
 	}
 
 	private async format_book(book: Book): Promise<Book> {
-		book = await this.notion.retrieve_paragraphs(book);
+		try {
+			book = await this.notion.retrieve_paragraphs(book);
 
-		return {
-			...book,
-			paragraphs: this.format_paragraph(book.paragraphs!),
-			formatted_at: new Date(Date.now() + FIVE_MINUTES_DELAY),
-		};
+			book = {
+				...book,
+				paragraphs: this.format_paragraph(book.paragraphs!),
+				formatted_at: new Date(Date.now() + FIVE_MINUTES_DELAY),
+			};
+
+			console.log("[INFO] Formatted book", book.title);
+
+			return this.notion.update_book(book);
+		} catch (err) {
+			console.log("[ERROR] Failed to format book", book.title, err);
+
+			return book;
+		}
 	}
 
 	private format_paragraph(paragraph: Paragraph[]): Paragraph[] {
