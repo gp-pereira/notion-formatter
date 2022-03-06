@@ -17,10 +17,10 @@ export class Notion {
 	}
 
 	async retrieve_paragraphs(book: Book): Promise<Book> {
-		const response = (await this.client.request({
-			method: "get",
-			path: `blocks/${book.id}/children`,
-		})) as any;
+		const response = await this.client.blocks.children.list({
+			block_id: book.id,
+			page_size: 100,
+		});
 
 		const paragraphs = response.results
 			.filter(this.is_paragraph)
