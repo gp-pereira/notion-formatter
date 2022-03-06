@@ -1,6 +1,5 @@
 import { Client } from "@notionhq/client";
 import { Book, Paragraph } from "./Book";
-import { timer } from "./timer";
 
 export class Notion {
 	private client: Client;

@@ -1,6 +1,5 @@
 import { Book, Paragraph } from "./Book";
 import { Notion } from "./Notion";
-import { timer } from "./timer";
 
 const ONE_HOUR_DELAY = 1000 * 60 * 60;
 
