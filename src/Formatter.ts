@@ -10,17 +10,17 @@ export class Formatter {
 		for (const book of books) {
 			if (!this.should_format(book)) continue;
 
-			try {
-				console.log(`\n[INFO] Formatting book ${book.title}`);
+			console.log(`\n[INFO] Formatting book ${book.title}`);
 
-				const iterator = this.iterate_paragraphs(book);
+			const iterator = this.iterate_paragraphs(book);
 
-				for await (const paragraphs of iterator) {
-					console.log(
-						`[INFO]   Updating batch of ${paragraphs.length} paragraphs`
-					);
+			for await (const paragraphs of iterator) {
+				console.log(
+					`[INFO]   Updating batch of ${paragraphs.length} paragraphs`
+				);
 
-					for (let i = 0; i < paragraphs.length; i++) {
+				for (let i = 0; i < paragraphs.length; i++) {
+					try {
 						const paragraph = paragraphs[i];
 						const formatted = this.format_paragraph(paragraph);
 
@@ -28,17 +28,17 @@ export class Formatter {
 						await this.notion.update_paragraph(formatted);
 
 						console.log(`[INFO]     Updated paragraph ${i}`);
+					} catch (err) {
+						console.log("[ERROR]    Failed to format paragraph", err);
 					}
-
-					console.log("[INFO]   Done updating batch");
 				}
 
-				await this.format_book(book);
-
-				console.log("[INFO] Done formatting book");
-			} catch (err) {
-				console.log("[ERROR] Failed to format book", book.title, err);
+				console.log("[INFO]   Done updating batch");
 			}
+
+			await this.format_book(book);
+
+			console.log("[INFO] Done formatting book");
 		}
 	}
 

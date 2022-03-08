@@ -72,14 +72,14 @@ describe.only("Formatter", () => {
 		expect(fake_notion.update_paragraph).not.toHaveBeenCalled();
 	});
 
-	it("should not update the book format date in case of paragraph failure", async () => {
-		fake_notion.retrieve_paragraphs.mockImplementationOnce(() => {
+	it("should continue to update the book in case of paragraph failure", async () => {
+		fake_notion.update_paragraph.mockImplementationOnce(() => {
 			throw new Error("Random external error");
 		});
 
 		await formatter.execute();
 
-		expect(fake_notion.update_book).not.toHaveBeenCalled();
+		expect(fake_notion.update_book).toHaveBeenCalled();
 	});
 
 	it("should not format a book before an external update is made", async () => {
