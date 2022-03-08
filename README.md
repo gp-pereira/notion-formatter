@@ -18,7 +18,7 @@ But not anymore. This code periodically checks for updated pages and formats the
 
 ## Results
 
-In case you're wondering, this excerpt comes from Dave Farley's book, Modern Software Engineering.
+In case you're wondering, the excerpt above comes from Dave Farley's book, Modern Software Engineering.
 
 You can find many more of them (now **properly formatted**) in my [Notion Book Notes](https://www.notion.so/7d19da5c61194297a0cba6f935511ba1?v=9c75395dff014f439be5162d7d252746).
 
