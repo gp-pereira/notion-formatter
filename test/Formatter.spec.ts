@@ -61,6 +61,17 @@ describe.only("Formatter", () => {
 		});
 	});
 
+	it("should not update paragraph if formatting does not change the content", async () => {
+		fake_notion.retrieve_paragraphs.mockResolvedValueOnce({
+			paragraphs: [{ content: "Goodbye Mars", id: 2 }],
+			cursor: "",
+		});
+
+		await formatter.execute();
+
+		expect(fake_notion.update_paragraph).not.toHaveBeenCalled();
+	});
+
 	it("should not update the book format date in case of paragraph failure", async () => {
 		fake_notion.retrieve_paragraphs.mockImplementationOnce(() => {
 			throw new Error("Random external error");

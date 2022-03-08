@@ -11,21 +11,25 @@ export class Formatter {
 			if (!this.should_format(book)) continue;
 
 			try {
+				console.log(`[INFO] Formatting book ${book.title}`);
+
 				const iterator = this.iterate_paragraphs(book);
 
 				for await (const paragraphs of iterator) {
-					console.log(paragraphs);
-
-					const formatted_paragraphs = this.format_paragraphs(paragraphs);
-
 					console.log(
 						`[INFO] Updating batch of ${paragraphs.length} paragraphs`
 					);
 
-					for (let i = 0; i < formatted_paragraphs.length; i++) {
-						await this.notion.update_paragraph(formatted_paragraphs[i]);
+					for (let i = 0; i < paragraphs.length; i++) {
+						const paragraph = paragraphs[i];
+						const formatted = this.format_paragraph(paragraph);
 
-						console.log(`[INFO Updated paragraph ${i} of ${paragraphs.length}`);
+						if (formatted.content == paragraph.content) continue;
+						await this.notion.update_paragraph(formatted);
+
+						console.log(
+							`[INFO] Updated paragraph ${i} of ${paragraphs.length}`
+						);
 					}
 
 					console.log(
@@ -45,17 +49,14 @@ export class Formatter {
 
 	private should_format(book: Book): boolean {
 		if (!book.formatted_at) return true;
-		// if (book.id == "50c71314-4805-43a7-8b64-3070959424df") return true;
 		return book.formatted_at < book.updated_at;
 	}
 
-	private format_paragraphs(paragraph: Paragraph[]): Paragraph[] {
-		return paragraph.map((paragraph) => {
-			return {
-				...paragraph,
-				content: paragraph.content.replace(/\n/g, " ").replace(/\s+/g, " "),
-			};
-		});
+	private format_paragraph(paragraph: Paragraph): Paragraph {
+		return {
+			...paragraph,
+			content: paragraph.content.replace(/\n/g, " ").replace(/\s+/g, " "),
+		};
 	}
 
 	private iterate_paragraphs(book: Book): AsyncIterable<Paragraph[]> {
@@ -69,7 +70,7 @@ export class Formatter {
 					async next() {
 						const { paragraphs, cursor } = await notion.retrieve_paragraphs(
 							book,
-							next_cursor
+							next_cursor == "start" ? undefined : next_cursor
 						);
 
 						next_cursor = curr_cursor;
