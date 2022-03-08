@@ -12,31 +12,8 @@ export class Formatter {
 
 			console.log(`\n[INFO] Formatting book ${book.title}`);
 
-			const iterator = this.iterate_paragraphs(book);
-
-			for await (const paragraphs of iterator) {
-				console.log(
-					`[INFO]   Updating batch of ${paragraphs.length} paragraphs`
-				);
-
-				for (let i = 0; i < paragraphs.length; i++) {
-					try {
-						const paragraph = paragraphs[i];
-						const formatted = this.format_paragraph(paragraph);
-
-						if (formatted.content == paragraph.content) continue;
-						await this.notion.update_paragraph(formatted);
-
-						console.log(`[INFO]     Updated paragraph ${i}`);
-					} catch (err) {
-						console.log("[ERROR]    Failed to format paragraph", err);
-					}
-				}
-
-				console.log("[INFO]   Done updating batch");
-			}
-
-			await this.format_book(book);
+			await this.update_paragraphs(book);
+			await this.update_book(book);
 
 			console.log("[INFO] Done formatting book");
 		}
@@ -47,31 +24,26 @@ export class Formatter {
 		return book.formatted_at < book.updated_at;
 	}
 
-	private iterate_paragraphs(book: Book): AsyncIterable<Paragraph[]> {
-		const notion = this.notion;
-		let next_cursor = "start";
-		let curr_cursor = "start";
+	private async update_paragraphs(book: Book): Promise<void> {
+		for await (const paragraphs of this.notion.iterate_paragraphs(book)) {
+			console.log(`[INFO]   Updating batch of ${paragraphs.length} paragraphs`);
 
-		return {
-			[Symbol.asyncIterator]() {
-				return {
-					async next() {
-						const { paragraphs, cursor } = await notion.retrieve_paragraphs(
-							book,
-							next_cursor == "start" ? undefined : next_cursor
-						);
+			for (let i = 0; i < paragraphs.length; i++) {
+				try {
+					const paragraph = paragraphs[i];
+					const formatted = this.format_paragraph(paragraph);
 
-						next_cursor = curr_cursor;
-						curr_cursor = cursor as string;
+					if (formatted.content == paragraph.content) continue;
+					await this.notion.update_paragraph(formatted);
 
-						return {
-							done: !next_cursor,
-							value: paragraphs,
-						};
-					},
-				};
-			},
-		};
+					console.log(`[INFO]     Updated paragraph ${i}`);
+				} catch (err) {
+					console.log("[ERROR]    Failed to format paragraph", err);
+				}
+			}
+
+			console.log("[INFO]   Done updating batch");
+		}
 	}
 
 	private format_paragraph(paragraph: Paragraph): Paragraph {
@@ -81,7 +53,7 @@ export class Formatter {
 		};
 	}
 
-	private async format_book(book: Book): Promise<void> {
+	private async update_book(book: Book): Promise<void> {
 		const delay = +1 * 60 * 60 * 1000;
 
 		book.formatted_at = new Date(Date.now() + delay);
