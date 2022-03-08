@@ -11,13 +11,13 @@ export class Formatter {
 			if (!this.should_format(book)) continue;
 
 			try {
-				console.log(`[INFO] Formatting book ${book.title}`);
+				console.log(`\n[INFO] Formatting book ${book.title}`);
 
 				const iterator = this.iterate_paragraphs(book);
 
 				for await (const paragraphs of iterator) {
 					console.log(
-						`[INFO] Updating batch of ${paragraphs.length} paragraphs`
+						`[INFO]   Updating batch of ${paragraphs.length} paragraphs`
 					);
 
 					for (let i = 0; i < paragraphs.length; i++) {
@@ -27,20 +27,15 @@ export class Formatter {
 						if (formatted.content == paragraph.content) continue;
 						await this.notion.update_paragraph(formatted);
 
-						console.log(
-							`[INFO] Updated paragraph ${i} of ${paragraphs.length}`
-						);
+						console.log(`[INFO]     Updated paragraph ${i}`);
 					}
 
-					console.log(
-						`[INFO] Done updating batch of ${paragraphs.length} paragraphs`
-					);
+					console.log("[INFO]   Done updating batch");
 				}
 
-				book.formatted_at = new Date();
-				await this.notion.update_book(book);
+				await this.format_book(book);
 
-				console.log(`[INFO] Done formatting book ${book.title}`);
+				console.log("[INFO] Done formatting book");
 			} catch (err) {
 				console.log("[ERROR] Failed to format book", book.title, err);
 			}
@@ -50,13 +45,6 @@ export class Formatter {
 	private should_format(book: Book): boolean {
 		if (!book.formatted_at) return true;
 		return book.formatted_at < book.updated_at;
-	}
-
-	private format_paragraph(paragraph: Paragraph): Paragraph {
-		return {
-			...paragraph,
-			content: paragraph.content.replace(/\n/g, " ").replace(/\s+/g, " "),
-		};
 	}
 
 	private iterate_paragraphs(book: Book): AsyncIterable<Paragraph[]> {
@@ -84,5 +72,19 @@ export class Formatter {
 				};
 			},
 		};
+	}
+
+	private format_paragraph(paragraph: Paragraph): Paragraph {
+		return {
+			...paragraph,
+			content: paragraph.content.replace(/\n/g, " ").replace(/\s+/g, " "),
+		};
+	}
+
+	private async format_book(book: Book): Promise<void> {
+		const delay = +1 * 60 * 60 * 1000;
+
+		book.formatted_at = new Date(Date.now() + delay);
+		await this.notion.update_book(book);
 	}
 }
