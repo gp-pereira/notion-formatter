@@ -10,11 +10,7 @@ async function main() {
 
 	const formatter = new Formatter(notion);
 
-	console.log("[INFO] Started formatting books");
-
 	await formatter.execute();
-
-	console.log("[INFO] Done formatting books");
 }
 
 main();
