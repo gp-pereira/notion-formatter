@@ -1,8 +1,8 @@
-"use strict";
 module.exports = {
     clearMocks: true,
     preset: "ts-jest",
     testEnvironment: "node",
     testMatch: ["**/*.spec.ts"],
-    collectCoverage: false,
+    collectCoverage: true,
+    coverageReporters: ["json-summary"]
 };

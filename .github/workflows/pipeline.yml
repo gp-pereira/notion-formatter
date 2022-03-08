@@ -22,7 +22,10 @@ jobs:
     - run: npm install -g yarn    
     - run: | 
         yarn 
-        yarn test
+        yarn test:coverage
+    - uses: jpb06/jest-badges-action@latest
+        with:
+          branches: main 
 
   deploy:
     needs: test
