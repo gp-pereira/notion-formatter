@@ -9,6 +9,8 @@ export class Notion {
 	}
 
 	async retrieve_books(): Promise<Book[]> {
+		await this.timer();
+
 		const books = await this.client.databases.query({
 			database_id: this.database_id,
 		});
@@ -16,17 +18,23 @@ export class Notion {
 		return books.results.map((book) => this.parse_book(book));
 	}
 
-	async retrieve_paragraphs(book: Book): Promise<Book> {
+	async retrieve_paragraphs(
+		book: Book,
+		cursor?: string
+	): Promise<{ paragraphs: Paragraph[]; cursor: null | string }> {
+		await this.timer();
+
 		const response = await this.client.blocks.children.list({
 			block_id: book.id,
 			page_size: 100,
+			start_cursor: cursor,
 		});
 
 		const paragraphs = response.results
 			.filter(this.is_paragraph)
 			.map(this.parse_paragraph);
 
-		return { ...book, paragraphs };
+		return { paragraphs, cursor: response.next_cursor };
 	}
 
 	private is_paragraph(block: any): boolean {
@@ -34,7 +42,7 @@ export class Notion {
 	}
 
 	async update_book(book: Book): Promise<Book> {
-		book = await this.update_paragraphs(book);
+		await this.timer();
 
 		const response = await this.client.pages.update({
 			page_id: book.id,
@@ -51,17 +59,9 @@ export class Notion {
 		return { ...book, ...this.parse_book(response) };
 	}
 
-	private async update_paragraphs(book: Book): Promise<Book> {
-		const paragraphs = await Promise.all(
-			book.paragraphs!.map(async (paragraph, i) => {
-				return this.update_paragraph(paragraph);
-			})
-		);
+	async update_paragraph(paragraph: Paragraph) {
+		await this.timer();
 
-		return { ...book, paragraphs };
-	}
-
-	private async update_paragraph(paragraph: Paragraph) {
 		const response = await this.client.blocks.update({
 			block_id: paragraph.id,
 			paragraph: {
@@ -97,5 +97,10 @@ export class Notion {
 			id: block.id,
 			content: block.paragraph.rich_text[0]?.plain_text,
 		};
+	}
+
+	private timer(): Promise<void> {
+		const REQUESTS_DELAY = 400;
+		return new Promise((resolve) => setTimeout(resolve, REQUESTS_DELAY));
 	}
 }

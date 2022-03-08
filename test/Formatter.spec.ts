@@ -1,3 +1,4 @@
+import { Book } from "../src/Book";
 import { Formatter } from "../src/Formatter";
 import { Notion } from "../src/Notion";
 
@@ -5,108 +6,80 @@ const fake_notion = {
 	retrieve_books: jest.fn(),
 	retrieve_paragraphs: jest.fn(async (book) => book),
 	update_book: jest.fn(async (book) => book),
-	update_paragraphs: jest.fn(async (book) => book),
+	update_paragraph: jest.fn(async (book) => book),
 } as any;
 
 describe.only("Formatter", () => {
 	const formatter = new Formatter(fake_notion);
+	let book: Book;
 
-	const book = {
-		id: "d89f96c1-b90c-4f94-8c5c-e70cf0d0ae82",
-		title: "Book One - Water",
-		updated_at: new Date(),
-		formatted_at: null,
-	};
+	beforeEach(() => {
+		book = {
+			id: "d89f96c1-b90c-4f94-8c5c-e70cf0d0ae82",
+			title: "Book One - Water",
+			updated_at: new Date(),
+			formatted_at: null,
+		};
 
-	it("should retrieve all books and format them", async () => {
 		fake_notion.retrieve_books.mockResolvedValue([book]);
 
-		fake_notion.retrieve_paragraphs.mockImplementation(async (book: any) => ({
-			...book,
-			paragraphs: [
-				{
-					id: "d89f96c1-b90c-4f94-8c5c-e70cf0d0ae82",
-					content:
-						"This is a paragraph.\n     This belongs to the same paragraph.",
-				},
-				{
-					id: "d89f96c1-b90c-4f94-8c5c-e70cf0d0ae82",
-					content:
-						"This is a paragraph.  \nThis belongs to the same paragraph.",
-				},
-				{
-					id: "d89f96c1-b90c-4f94-8c5c-e70cf0d0ae82",
-					content:
-						"This is a paragraph.\n\n This belongs to the same paragraph.",
-				},
-			],
-		}));
-
-		jest.spyOn(console, "log").mockImplementation();
-
-		const [formatted_book] = await formatter.execute();
-
-		expect(formatted_book).toEqual({
-			...book,
-			formatted_at: expect.any(Date),
-			paragraphs: [
-				{
-					id: "d89f96c1-b90c-4f94-8c5c-e70cf0d0ae82",
-					content: "This is a paragraph. This belongs to the same paragraph.",
-				},
-				{
-					id: "d89f96c1-b90c-4f94-8c5c-e70cf0d0ae82",
-					content: "This is a paragraph. This belongs to the same paragraph.",
-				},
-				{
-					id: "d89f96c1-b90c-4f94-8c5c-e70cf0d0ae82",
-					content: "This is a paragraph. This belongs to the same paragraph.",
-				},
-			],
+		fake_notion.retrieve_paragraphs.mockResolvedValue({
+			paragraphs: [{ content: "Hello\n World", id: 1 }],
+			cursor: "",
 		});
 
-		expect(console.log).toHaveBeenCalled();
+		jest.spyOn(console, "log").mockImplementation();
 	});
 
-	it("should not format books before an external update is made", async () => {
-		const now = new Date();
+	it("should iteratively update the book paragraphs", async () => {
+		fake_notion.retrieve_paragraphs.mockResolvedValueOnce({
+			paragraphs: [{ content: "Goodbye\n Mars", id: 2 }],
+			cursor: "next",
+		});
 
-		fake_notion.retrieve_books.mockResolvedValue([
-			{
-				...book,
-				updated_at: new Date(1999, 10, 1),
-				formatted_at: now,
-			},
-		]);
+		await formatter.execute();
 
-		const formatted_books = await formatter.execute();
+		expect(fake_notion.update_paragraph).toHaveBeenNthCalledWith(1, {
+			content: "Goodbye Mars",
+			id: 2,
+		});
 
-		expect(formatted_books).toEqual([]);
+		expect(fake_notion.update_paragraph).toHaveBeenNthCalledWith(2, {
+			content: "Hello World",
+			id: 1,
+		});
+
+		expect(fake_notion.update_paragraph).toHaveBeenCalledTimes(2);
 	});
 
-	it("should not stop formatting after a failure", async () => {
-		fake_notion.retrieve_books.mockResolvedValue([
-			{
-				...book,
-				paragraphs: [],
-			},
-		]);
+	it("should update the book format date", async () => {
+		await formatter.execute();
 
+		expect(fake_notion.update_book).toHaveBeenCalledWith({
+			...book,
+			formatted_at: expect.any(Date),
+		});
+	});
+
+	it("should not update the book format date in case of paragraph failure", async () => {
 		fake_notion.retrieve_paragraphs.mockImplementationOnce(() => {
 			throw new Error("Random external error");
 		});
 
-		jest.spyOn(console, "log").mockImplementation();
+		await formatter.execute();
 
-		const formatted_books = await formatter.execute();
+		expect(fake_notion.update_book).not.toHaveBeenCalled();
+	});
 
-		expect(formatted_books).toEqual([
+	it("should not format a book before an external update is made", async () => {
+		fake_notion.retrieve_books.mockResolvedValue([
 			{
 				...book,
-				paragraphs: [],
+				updated_at: new Date(1999, 10, 1),
+				formatted_at: new Date(),
 			},
 		]);
 
-		expect(console.log).toHaveBeenCalled();
+		expect(fake_notion.update_book).not.toHaveBeenCalled();
 	});
 });

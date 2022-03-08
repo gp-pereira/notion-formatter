@@ -38,7 +38,7 @@ describe("Notion", () => {
 		expect(book_with_paragraphs.paragraphs![0].content).toBeDefined();
 	});
 
-	it("should update a book", async () => {
+	it("should update a simple book", async () => {
 		const book = {
 			id: "d89f96c1-b90c-4f94-8c5c-e70cf0d0ae82",
 			title: "Clean Architecture",
@@ -52,15 +52,17 @@ describe("Notion", () => {
 			],
 		};
 
-		const updated_book = await notion.update_book(book);
-
 		// Notion rounds the date to the nearest minute below
 		const end = book.formatted_at!.getTime();
 		const start = end - ONE_MINUTE;
+
+		const updated_book = await notion.update_book(book);
 
 		expect(updated_book.formatted_at!.getTime()).toBeGreaterThan(start);
 		expect(updated_book.formatted_at!.getTime()).toBeLessThan(end);
 
 		expect(updated_book.paragraphs).toEqual(book.paragraphs);
 	});
+
+	it("should update a long book", async () => {});
 });
