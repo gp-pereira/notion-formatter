@@ -26,7 +26,7 @@ export class Notion {
 
 		const response = await this.client.blocks.children.list({
 			block_id: book.id,
-			page_size: 100,
+			page_size: 200,
 			start_cursor: cursor,
 		});
 
