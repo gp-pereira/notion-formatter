@@ -18,29 +18,6 @@ export class Notion {
 		return books.results.map((book) => this.parse_book(book));
 	}
 
-	async retrieve_paragraphs(
-		book: Book,
-		cursor?: string
-	): Promise<{ paragraphs: Paragraph[]; cursor: null | string }> {
-		await this.timer();
-
-		const response = await this.client.blocks.children.list({
-			block_id: book.id,
-			page_size: 200,
-			start_cursor: cursor,
-		});
-
-		const paragraphs = response.results
-			.filter(this.is_paragraph)
-			.map(this.parse_paragraph);
-
-		return { paragraphs, cursor: response.next_cursor };
-	}
-
-	private is_paragraph(block: any): boolean {
-		return block.type === "paragraph" && block.paragraph.rich_text.length > 0;
-	}
-
 	async update_book(book: Book): Promise<Book> {
 		await this.timer();
 
@@ -79,6 +56,41 @@ export class Notion {
 		return this.parse_paragraph(response);
 	}
 
+	iterate_paragraphs(book: Book): AsyncIterable<Paragraph[]> {
+		const notion = this as Notion;
+
+		let next_cursor = "start";
+		let curr_cursor = "start";
+
+		return {
+			[Symbol.asyncIterator]() {
+				return {
+					async next() {
+						await notion.timer();
+
+						const response = await notion.client.blocks.children.list({
+							block_id: book.id,
+							page_size: 200,
+							start_cursor: next_cursor == "start" ? undefined : next_cursor,
+						});
+
+						const paragraphs = response.results
+							.filter(notion.is_paragraph)
+							.map(notion.parse_paragraph);
+
+						next_cursor = curr_cursor;
+						curr_cursor = response.next_cursor as string;
+
+						return {
+							done: !next_cursor,
+							value: paragraphs,
+						};
+					},
+				};
+			},
+		};
+	}
+
 	private parse_book(book: any): Book {
 		return {
 			id: book.id,
@@ -86,6 +98,10 @@ export class Notion {
 			updated_at: new Date(book.last_edited_time),
 			formatted_at: this.formatted_at(book.properties.formatted_at.date?.start),
 		};
+	}
+
+	private is_paragraph(block: any): boolean {
+		return block.type === "paragraph" && block.paragraph.rich_text.length > 0;
 	}
 
 	private formatted_at(date?: string): Date | null {
