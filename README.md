@@ -1,6 +1,7 @@
 # Notion Formatter
 
 [![CI/CD](https://github.com/gp-pereira/notion-formatter/actions/workflows/pipeline.yml/badge.svg)](https://github.com/gp-pereira/notion-formatter/actions/workflows/pipeline.yml)
+![Total coverage](./badges/coverage-jest%20coverage.svg)
 
 ## Motivation
 While I'm reading, I like to copy interesting excerpts into Notion so I can review them later.
